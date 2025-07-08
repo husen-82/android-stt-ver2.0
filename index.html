@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    
+    <!-- Basic Meta Tags -->
+    <meta name="theme-color" content="#007bff" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="ふせん君" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    
+    <!-- Android向け最適化 -->
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="msapplication-tap-highlight" content="no" />
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Android最適化された音声入力・文字起こし忘備録アプリ。" />
+    <meta name="keywords" content="音声入力,文字起こし,メモ,Android" />
+    <meta name="author" content="ふせん君開発チーム" />
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="ふせん君 - 音声入力忘備録アプリ" />
+    <meta property="og:description" content="Android最適化された音声入力・文字起こし忘備録アプリ" />
+    <meta property="og:type" content="website" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="ふせん君 - 音声入力忘備録アプリ" />
+    <meta name="twitter:description" content="Android最適化された音声入力・文字起こし忘備録アプリ" />
+    
+    <title>ふせん君 - 音声入力忘備録アプリ</title>
+    
+    <!-- Critical CSS inlined for performance -->
+    <style>
+      /* Critical loading styles */
+      .loading-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        color: white;
+      }
+      
+      .loading-logo {
+        width: 80px;
+        height: 80px;
+        background: white;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 16px;
+        animation: loading-pulse 1.5s ease-in-out infinite;
+      }
+      
+      @keyframes loading-pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+      }
+      
+      .loading-text {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+      
+      .loading-subtext {
+        font-size: 14px;
+        opacity: 0.8;
+      }
+      
+      /* Hide loading screen when app is ready */
+      .app-ready .loading-screen {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loading-screen">
+      <div class="loading-logo">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 1L3 5V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V5L12 1Z" stroke="#667eea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M9 12L11 14L15 10" stroke="#667eea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="loading-text">ふせん君</div>
+      <div class="loading-subtext">音声入力アプリを読み込み中...</div>
+    </div>
+    
+    <!-- App Root -->
+    <div id="root"></div>
+    
+    <!-- Basic App Initialization -->
+    <script>
+      // Hide loading screen when app is ready
+      window.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+          document.body.classList.add('app-ready');
+        }, 1000);
+      });
+      
+      // Android向けビューポート調整
+      function adjustViewport() {
+        const vh = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty('--vh', `${vh}px`);
+      }
+      
+      window.addEventListener('resize', adjustViewport);
+      window.addEventListener('orientationchange', adjustViewport);
+      adjustViewport();
+      
+      // Android向けキーボード対応
+      if (/Android/i.test(navigator.userAgent)) {
+        const viewport = document.querySelector('meta[name=viewport]');
+        if (viewport) {
+          viewport.setAttribute('content', 
+            'width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content'
+          );
+        }
+      }
+      
+      // Performance monitoring
+      window.addEventListener('load', () => {
+        if ('performance' in window) {
+          const loadTime = performance.timing.loadEventEnd - performance.timing.navigationStart;
+          console.log('Page load time:', loadTime + 'ms');
+        }
+      });
+    </script>
+    
+    <!-- Main App Script -->
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

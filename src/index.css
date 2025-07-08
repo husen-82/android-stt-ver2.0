@@ -1,0 +1,378 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: 'Hiragino Sans', 'Yu Gothic UI', 'Meiryo', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Android向けフォント最適化 */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  /* Android向けタッチ最適化 */
+  * {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+
+  /* PWA向けビューポート設定 */
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+  }
+
+  #root {
+    height: 100%;
+    overflow: hidden;
+  }
+}
+
+/* Custom animations */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Android向け音声入力ボタンアニメーション */
+@keyframes android-voice-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+  }
+}
+
+.android-voice-active {
+  animation: android-voice-pulse 2s infinite;
+}
+
+/* 音声レベルインジケーター */
+@keyframes audio-level-pulse {
+  0%, 100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.audio-level-indicator {
+  animation: audio-level-pulse 0.5s ease-in-out infinite;
+}
+
+/* Android向けタッチフィードバック強化 */
+@media (hover: none) and (pointer: coarse) {
+  button:active {
+    transform: scale(0.95);
+    transition: transform 0.1s ease;
+  }
+  
+  .voice-button:active {
+    transform: scale(0.9);
+  }
+  
+  /* Android向けリップル効果 */
+  .android-ripple {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .android-ripple::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+  }
+  
+  .android-ripple:active::before {
+    width: 300px;
+    height: 300px;
+  }
+}
+
+/* PWA向けスプラッシュスクリーン */
+.pwa-splash {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.pwa-splash-logo {
+  width: 120px;
+  height: 120px;
+  background: white;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  animation: splash-bounce 1s ease-in-out infinite alternate;
+}
+
+@keyframes splash-bounce {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-10px);
+  }
+}
+
+/* オフライン状態の表示 */
+.offline-indicator {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: #f59e0b;
+  color: white;
+  text-align: center;
+  padding: 8px;
+  font-size: 14px;
+  z-index: 1000;
+  transform: translateY(-100%);
+  transition: transform 0.3s ease;
+}
+
+.offline-indicator.show {
+  transform: translateY(0);
+}
+
+/* Android向けスクロール最適化 */
+.android-scroll {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* 音声認識状態のビジュアルフィードバック */
+.voice-recognition-active {
+  position: relative;
+}
+
+.voice-recognition-active::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  border: 2px solid #ef4444;
+  border-radius: inherit;
+  animation: voice-recognition-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes voice-recognition-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.1);
+  }
+}
+
+/* メモアイテムのAndroid向け最適化 */
+.memo-item-android {
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* 音声レベルメーター */
+.audio-level-meter {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.audio-level-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #f59e0b, #ef4444);
+  border-radius: 2px;
+  transition: width 0.1s ease;
+}
+
+/* PWA更新通知 */
+.pwa-update-notification {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  background: #1f2937;
+  color: white;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  animation: slide-up 0.3s ease;
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Android向けダークモード対応 */
+@media (prefers-color-scheme: dark) {
+  .android-dark {
+    background-color: #121212;
+    color: #ffffff;
+  }
+  
+  .android-dark .memo-item {
+    background-color: #1e1e1e;
+    border-color: #333333;
+  }
+  
+  .android-dark .voice-button {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* 高コントラストモード対応 */
+@media (prefers-contrast: high) {
+  .voice-button {
+    border: 2px solid #000000;
+  }
+  
+  .memo-item {
+    border: 2px solid #000000;
+  }
+}
+
+/* 動きを減らす設定への対応 */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Android向けフォーカス表示 */
+.android-focus:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* 音声入力エラー状態 */
+.voice-error {
+  animation: voice-error-shake 0.5s ease-in-out;
+}
+
+@keyframes voice-error-shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+  20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+
+/* Android向けキーボード対応 */
+.keyboard-adjust {
+  transition: height 0.3s ease;
+}
+
+/* 音声データ処理中のローディング */
+.audio-processing {
+  position: relative;
+}
+
+.audio-processing::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid #ffffff;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: audio-processing-spin 1s linear infinite;
+}
+
+@keyframes audio-processing-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* メモリ効率化のためのGPU加速 */
+.gpu-accelerated {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Android向けスワイプジェスチャー */
+.swipe-gesture {
+  touch-action: pan-x;
+}
+
+/* 音声認識の信頼度表示 */
+.confidence-indicator {
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  color: #666;
+}
+
+.confidence-high { color: #10b981; }
+.confidence-medium { color: #f59e0b; }
+.confidence-low { color: #ef4444; }

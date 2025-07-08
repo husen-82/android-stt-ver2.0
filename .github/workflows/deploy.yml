@@ -1,0 +1,178 @@
+# GitHub Actions Workflow for Fusenkun STT Deployment
+name: Deploy Fusenkun STT
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  GOOGLE_CLOUD_PROJECT_ID: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
+  GOOGLE_CLOUD_WORKLOAD_IDENTITY_POOL_ID: ${{ secrets.GOOGLE_CLOUD_WORKLOAD_IDENTITY_POOL_ID }}
+  GOOGLE_CLOUD_WORKLOAD_IDENTITY_PROVIDER_ID: ${{ secrets.GOOGLE_CLOUD_WORKLOAD_IDENTITY_PROVIDER_ID }}
+  GOOGLE_CLOUD_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_CLOUD_SERVICE_ACCOUNT_EMAIL }}
+
+jobs:
+  # フロントエンドビルド・デプロイ
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build frontend
+      run: npm run build
+      env:
+        NODE_ENV: production
+
+    - name: Deploy to Netlify
+      uses: nwtgck/actions-netlify@v3.0
+      with:
+        publish-dir: './dist'
+        production-branch: main
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        deploy-message: "Deploy from GitHub Actions"
+        enable-pull-request-comment: false
+        enable-commit-comment: true
+        overwrites-pull-request-comment: true
+      env:
+        NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+        NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+
+  # バックエンドテスト・デプロイ
+  backend:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install backend dependencies
+      run: |
+        cd backend
+        npm init -y
+        npm install @google-cloud/speech google-auth-library multer express cors dotenv
+
+    - name: Authenticate to Google Cloud
+      id: auth
+      uses: google-github-actions/auth@v2
+      with:
+        workload_identity_provider: ${{ env.GOOGLE_CLOUD_WORKLOAD_IDENTITY_PROVIDER_ID }}
+        service_account: ${{ env.GOOGLE_CLOUD_SERVICE_ACCOUNT_EMAIL }}
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+
+    - name: Test STT Service
+      run: |
+        cd backend
+        node -e "
+          import('./services/google-stt-service.js').then(async (module) => {
+            const service = module.default;
+            try {
+              await service.initialize();
+              const health = await service.healthCheck();
+              console.log('STT Service Health:', health);
+              process.exit(0);
+            } catch (error) {
+              console.error('STT Service Test Failed:', error);
+              process.exit(1);
+            }
+          });
+        "
+      env:
+        NODE_ENV: production
+        GOOGLE_CLOUD_PROJECT_ID: ${{ env.GOOGLE_CLOUD_PROJECT_ID }}
+
+    - name: Deploy to Cloud Run
+      run: |
+        # Cloud Runへのデプロイ設定
+        gcloud run deploy fusenkun-stt-api \
+          --source=./backend \
+          --platform=managed \
+          --region=asia-northeast1 \
+          --allow-unauthenticated \
+          --set-env-vars="NODE_ENV=production,GOOGLE_CLOUD_PROJECT_ID=${{ env.GOOGLE_CLOUD_PROJECT_ID }}" \
+          --memory=1Gi \
+          --cpu=1 \
+          --timeout=300 \
+          --max-instances=10 \
+          --min-instances=0
+      if: github.ref == 'refs/heads/main'
+
+  # 統合テスト
+  integration-test:
+    needs: [frontend, backend]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Install test dependencies
+      run: npm install axios
+
+    - name: Run integration tests
+      run: |
+        node -e "
+          import('axios').then(async (axios) => {
+            try {
+              // フロントエンドの疎通確認
+              const frontendResponse = await axios.default.get('https://your-netlify-domain.netlify.app');
+              console.log('Frontend Status:', frontendResponse.status);
+              
+              // バックエンドAPIの疎通確認
+              const backendResponse = await axios.default.get('https://fusenkun-stt-api-xxx-an.a.run.app/api/stt/health');
+              console.log('Backend Health:', backendResponse.data);
+              
+              console.log('Integration tests passed!');
+            } catch (error) {
+              console.error('Integration test failed:', error.message);
+              process.exit(1);
+            }
+          });
+        "
+
+  # セキュリティスキャン
+  security:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Run security audit
+      run: |
+        npm audit --audit-level=high
+        cd backend && npm audit --audit-level=high
+
+    - name: Scan for secrets
+      uses: trufflesecurity/trufflehog@main
+      with:
+        path: ./
+        base: main
+        head: HEAD
