@@ -176,3 +176,22 @@ jobs:
         path: ./
         base: main
         head: HEAD
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write       # ← 必須！
+      contents: read
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v3
+
+      - name: Get OIDC Token
+        id: auth
+        run: |
+          export TOKEN=$(curl -sLS -X POST \
+            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=https://sts.googleapis.com")
+          echo "OIDC Token: $TOKEN"
