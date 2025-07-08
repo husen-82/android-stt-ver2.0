@@ -72,6 +72,14 @@ jobs:
         npm init -y
         npm install @google-cloud/speech google-auth-library multer express cors dotenv
 
+    - name: Get OIDC Token
+      id: get-token
+      run: |
+        export TOKEN=$(curl -sLS -X POST \
+          -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+          "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=https://sts.googleapis.com")
+        echo "OIDC Token retrieved successfully"
+
     - name: Authenticate to Google Cloud
       id: auth
       uses: google-github-actions/auth@v2
@@ -176,22 +184,3 @@ jobs:
         path: ./
         base: main
         head: HEAD
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write       # ← 必須！
-      contents: read
-
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@v3
-
-      - name: Get OIDC Token
-        id: auth
-        run: |
-          export TOKEN=$(curl -sLS -X POST \
-            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=https://sts.googleapis.com")
-          echo "OIDC Token: $TOKEN"
