@@ -93,7 +93,7 @@ jobs:
     - name: Test STT Service
       run: |
         cd backend
-        node -e "
+        node --input-type=module -e "
           import('./services/google-stt-service.js').then(async (module) => {
             const service = module.default;
             try {
