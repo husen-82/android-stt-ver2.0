@@ -109,7 +109,7 @@ jobs:
         "
       env:
         NODE_ENV: production
-        GOOGLE_CLOUD_PROJECT_ID: ${{ env.GOOGLE_CLOUD_PROJECT_ID }}
+        GOOGLE_CLOUD_PROJECT_ID: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
 
     - name: Deploy to Cloud Run
       run: |
