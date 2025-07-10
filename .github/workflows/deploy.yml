@@ -69,8 +69,7 @@ jobs:
     - name: Install backend dependencies
       run: |
         cd backend
-        npm init -y
-        npm install @google-cloud/speech google-auth-library multer express cors dotenv
+        npm ci
 
     - name: Get OIDC Token
       id: get-token
@@ -93,7 +92,7 @@ jobs:
     - name: Test STT Service
       run: |
         cd backend
-        node --input-type=module --experimental-modules -e "
+        node -e "
         import('./services/google-stt-service.js').then(async (module) => {
           const service = module.default;
           try {
