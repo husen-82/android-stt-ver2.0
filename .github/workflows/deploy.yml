@@ -4,6 +4,7 @@ name: Deploy Fusenkun STT
 on:
   push:
     branches: [ main ]
+    branches: [feature/new_code]
   pull_request:
     branches: [ main ]
 
