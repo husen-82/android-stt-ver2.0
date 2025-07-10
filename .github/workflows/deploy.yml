@@ -1,4 +1,4 @@
-# GitHub Actions Workflow for Fusenkun STT Deployment
+#　GitHub Actions Workflow for Fusenkun STT Deployment
 name: Deploy Fusenkun STT
 
 on:
