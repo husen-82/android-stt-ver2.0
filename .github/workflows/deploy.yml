@@ -1,4 +1,4 @@
-# GitHub Actions Workflow for Fusenkun STT Deployment
+#GitHub Actions Workflow for Fusenkun STT Deployment
 name: Deploy Fusenkun STT
 
 on:
@@ -111,8 +111,8 @@ jobs:
         NODE_ENV: production
         GOOGLE_CLOUD_PROJECT_ID: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
 
-    - name: Deploy to Cloud Run
-      run: |
+  - name: Deploy to Cloud Run
+    run: |
         # Cloud Runへのデプロイ設定
         gcloud run deploy fusenkun-stt-api \
           --source=./backend \
@@ -125,7 +125,7 @@ jobs:
           --timeout=300 \
           --max-instances=10 \
           --min-instances=0
-      if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
 
   # 統合テスト
   integration-test:
