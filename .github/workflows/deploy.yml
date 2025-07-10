@@ -90,23 +90,23 @@ jobs:
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v2
 
-    - name: Test STT Service
-      run: |
-        cd backend
-        node --input-type=module -e "
-          import('./services/google-stt-service.js').then(async (module) => {
-            const service = module.default;
-            try {
-              await service.initialize();
-              const health = await service.healthCheck();
-              console.log('STT Service Health:', health);
-              process.exit(0);
-            } catch (error) {
-              console.error('STT Service Test Failed:', error);
-              process.exit(1);
-            }
-          });
-        "
+- name: Test STT Service
+  run: |
+    cd backend
+    node --input-type=module --experimental-modules -e "
+    import('./services/google-stt-service.js').then(async (module) => {
+      const service = module.default;
+      try {
+        await service.initialize();
+        const health = await service.healthCheck();
+        console.log('STT Service Health:', health);
+        process.exit(0);
+      } catch (error) {
+        console.error('STT Service Test Failed:', error);
+        process.exit(1);
+      }
+    });
+    "
       env:
         NODE_ENV: production
         GOOGLE_CLOUD_PROJECT_ID: ${{ secrets.GOOGLE_CLOUD_PROJECT_ID }}
