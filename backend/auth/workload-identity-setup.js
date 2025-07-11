@@ -10,8 +10,13 @@ class WorkloadIdentityManager {
 
   // Workload Identity認証の初期化
   async initialize() {
+    // 既に初期化済みであれば、何もしないで終了
+    if (this.initialized) {
+      console.log('Workload Identity: Already initialized. Skipping.');
+      return;
+    }
     try {
-      console.log('Initializing Workload Identity...');
+      console.log('Workload Identity: Initializing...'); // ログメッセージを少し変更して区別しやすく
       
       // GitHub Actions環境での認証設定
       if (process.env.GITHUB_ACTIONS) {
@@ -30,12 +35,15 @@ class WorkloadIdentityManager {
 
       // 認証クライアントを取得
       this.client = await this.auth.getClient();
+      // ★ここがポイント★ 認証クライアントが取得できた時点でinitializedをtrueにする
+      this.initialized = true; 
+      
+      console.log('Workload Identity: Client obtained. Running authentication test...');
       
       // 認証テスト
       await this.testAuthentication();
-      
-      this.initialized = true;
-      console.log('Workload Identity initialized successfully');
+
+      console.log('Workload Identity: Initialized successfully.');
       
     } catch (error) {
       console.error('Workload Identity initialization failed:', error);
@@ -47,10 +55,10 @@ class WorkloadIdentityManager {
   async testAuthentication() {
     try {
       const projectId = await this.auth.getProjectId();
-      console.log('Authenticated for project:', projectId);
+      console.log('Workload Identity:Authenticated for project:', projectId);
       
       // アクセストークンを取得してテスト
-      const accessToken = await this.getAccessToken();
+      const accessToken = await this.getAccessToken(); // ここは initialize() の中で呼ばれているので、this.initialized は既に true
       if (!accessToken) {
         throw new Error('Failed to get access token');
       }
@@ -64,45 +72,36 @@ class WorkloadIdentityManager {
 
   // アクセストークンを取得
   async getAccessToken() {
+    // initialize() が呼び出される前にこのメソッドが呼ばれる可能性は低い
+    // もし initialize() が完了していない状態でこれらが呼ばれたら、エラーをスローすべき
+    if (!this.initialized) {
+      throw new Error('WorkloadIdentityManager is not initialized. Call initialize() first.');
+    }
+    
     try {
-      if (!this.initialized) {
-        await this.initialize();
-      }
-      
       const accessToken = await this.client.getAccessToken();
       return accessToken.token;
     } catch (error) {
-      console.error('Failed to get access token:', error);
+      console.error('Workload Identity: Failed to get access token:', error);
       throw new Error('アクセストークンの取得に失敗しました');
     }
   }
 
+
   // 認証済みクライアントを取得
   async getAuthenticatedClient() {
-    try {
-      if (!this.initialized) {
-        await this.initialize();
-      }
-      
-      return this.client;
-    } catch (error) {
-      console.error('Failed to get authenticated client:', error);
-      throw new Error('認証済みクライアントの取得に失敗しました');
+     if (!this.initialized) {
+      throw new Error('WorkloadIdentityManager is not initialized. Call initialize() first.');
     }
+    return this.client;
   }
 
-  // プロジェクトIDを取得
+// プロジェクトIDを取得
   async getProjectId() {
-    try {
-      if (!this.initialized) {
-        await this.initialize();
-      }
-      
-      return await this.auth.getProjectId();
-    } catch (error) {
-      console.error('Failed to get project ID:', error);
-      throw new Error('プロジェクトIDの取得に失敗しました');
+    if (!this.initialized) {
+      throw new Error('WorkloadIdentityManager is not initialized. Call initialize() first.');
     }
+    return await this.auth.getProjectId();
   }
 
   // 認証状態をチェック
@@ -116,6 +115,7 @@ class WorkloadIdentityManager {
       console.log('Refreshing authentication...');
       this.initialized = false;
       this.client = null;
+      tiis.auth = null;
       await this.initialize();
       console.log('Authentication refreshed successfully');
     } catch (error) {
