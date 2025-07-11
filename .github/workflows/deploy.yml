@@ -88,6 +88,39 @@ jobs:
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v2
 
+    - name: Debug Workload Identity Token Claims
+      id: token_debug
+      uses: actions/github-script@v7
+      with:
+        script: |
+            const core = require('@actions/core');
+            const jwt = require('jsonwebtoken');
+
+            // GitHub Actions の ID トークンを取得
+            const idToken = await core.getIDToken();
+            console.log('GitHub Actions ID Token (truncated):', idToken.substring(0, 50) + '...');
+
+            // トークンをデコードしてペイロードを表示
+            const decoded = jwt.decode(idToken);
+            console.log('Decoded JWT Claims:', JSON.stringify(decoded, null, 2));
+
+            // 特に 'repository' クレームの値を確認
+            if (decoded && decoded.repository) {
+              core.setOutput('actual_repository_claim', decoded.repository);
+              console.log('Actual "repository" claim value:', decoded.repository);
+            } else {
+              console.log('Warning: "repository" claim not found in ID token.');
+            }
+
+            // その他の関連クレームも確認すると良いでしょう
+            if (decoded && decoded.repository_owner) {
+              console.log('Actual "repository_owner" claim value:', decoded.repository_owner);
+            }
+
+        # デバッグログを後で参照しやすいように出力
+    - name: Display actual repository claim
+      run: echo "Actual repository claim was:${{ steps.token_debug.outputs.actual_repository_claim }}"
+
     - name: Test STT Service
       run: |
         cd backend
@@ -126,38 +159,6 @@ jobs:
           --min-instances=0
       if: github.ref == 'refs/heads/main'
 
-    - name: Debug Workload Identity Token Claims
-      id: token_debug
-      uses: actions/github-script@v7
-      with:
-        script: |
-            const core = require('@actions/core');
-            const jwt = require('jsonwebtoken');
-
-            // GitHub Actions の ID トークンを取得
-            const idToken = await core.getIDToken();
-            console.log('GitHub Actions ID Token (truncated):', idToken.substring(0, 50) + '...');
-
-            // トークンをデコードしてペイロードを表示
-            const decoded = jwt.decode(idToken);
-            console.log('Decoded JWT Claims:', JSON.stringify(decoded, null, 2));
-
-            // 特に 'repository' クレームの値を確認
-            if (decoded && decoded.repository) {
-              core.setOutput('actual_repository_claim', decoded.repository);
-              console.log('Actual "repository" claim value:', decoded.repository);
-            } else {
-              console.log('Warning: "repository" claim not found in ID token.');
-            }
-
-            // その他の関連クレームも確認すると良いでしょう
-            if (decoded && decoded.repository_owner) {
-              console.log('Actual "repository_owner" claim value:', decoded.repository_owner);
-            }
-
-        # デバッグログを後で参照しやすいように出力
-    - name: Display actual repository claim
-      run: echo "Actual repository claim was:${{ steps.token_debug.outputs.actual_repository_claim }}"
 
   # 統合テスト
   integration-test:
