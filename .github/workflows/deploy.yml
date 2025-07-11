@@ -166,35 +166,30 @@ jobs:
 
   # セキュリティスキャン
   security:
-    runs-on: ubuntu-latest
-  steps:
-  - name: Checkout code
-    uses: actions/checkout@v4
+   runs-on: ubuntu-latest
+   steps:
+   - name: Checkout code
+     uses: actions/checkout@v4
 
-  - name: Setup Node.js
-    uses: actions/setup-node@v4
-    with:
-      node-version: '18'
-      # フロントとバックエンドでキャッシュを共有する場合
-      # cache: 'npm' 
-      # cache-dependency-path: |
-      #   **/package-lock.json
+   - name: Setup Node.js
+     uses: actions/setup-node@v4
+     with:
+       node-version: '18'
 
-  - name: Run frontend security audit
-    # working-directory を指定しないのでルートで実行
-    run: |
+   - name: Run frontend security audit
+     run: |
       npm ci
       npm audit --audit-level=high
 
-  - name: Run backend security audit
-    working-directory: ./backend # backendディレクトリに移動
-    run: |
+   - name: Run backend security audit
+     working-directory: ./backend
+     run: |
       npm ci
       npm audit --audit-level=high
 
-  - name: Scan for secrets
-    uses: trufflesecurity/trufflehog@main
-    with:
+   - name: Scan for secrets
+     uses: trufflesecurity/trufflehog@main
+     with:
       path: ./
       base: main
       head: HEAD
