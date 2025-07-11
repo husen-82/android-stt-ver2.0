@@ -93,33 +93,33 @@ jobs:
       uses: actions/github-script@v7
       with:
         script: |
-            // 'core' と 'github' は actions/github-script によって自動的に提供されます
-            // const core = require('@actions/core'); // この行は不要です！
-            const jwt = require('jsonwebtoken');
-            
-            // GitHub Actions の ID トークンを取得
-            const idToken = await core.getIDToken();
-            console.log('GitHub Actions ID Token (truncated):', idToken.substring(0, 50) + '...');
-            
-            // トークンをデコードしてペイロードを表示
-            const decoded = jwt.decode(idToken);
-            console.log('Decoded JWT Claims:', JSON.stringify(decoded, null, 2));
-            
-            // 特に 'repository' クレームの値を確認
-            if (decoded && decoded.repository) {
-              core.setOutput('actual_repository_claim', decoded.repository);
-              console.log('Actual "repository" claim value:', decoded.repository);
-            } else {
-              console.log('Warning: "repository" claim not found in ID token.');
-            }
-            
-            // その他の関連クレームも確認すると良いでしょう
-            if (decoded && decoded.repository_owner) {
-              console.log('Actual "repository_owner" claim value:', decoded.repository_owner);
-            }
+          // 'core' と 'github' は actions/github-script によって自動的に提供されます
+          const jwt = require('jsonwebtoken');
+          
+          // GitHub Actions の ID トークンを取得
+          const idToken = await core.getIDToken();
+          console.log('GitHub Actions ID Token (truncated):', idToken.substring(0, 50) + '...');
+          
+          // トークンをデコードしてペイロードを表示
+          const decoded = jwt.decode(idToken);
+          console.log('Decoded JWT Claims:', JSON.stringify(decoded, null, 2));
+          
+          // 特に 'repository' クレームの値を確認
+          if (decoded && decoded.repository) {
+            core.setOutput('actual_repository_claim', decoded.repository);
+            console.log('Actual "repository" claim value:', decoded.repository);
+          } else {
+            console.log('Warning: "repository" claim not found in ID token.');
+          }
+          
+          // その他の関連クレームも確認すると良いでしょう
+          if (decoded && decoded.repository_owner) {
+            console.log('Actual "repository_owner" claim value:', decoded.repository_owner);
+          }
+    # ↑↑↑ ここまでが Debug Workload Identity Token Claims ステップのwith: script: のブロック
 
-        # デバッグログを後で参照しやすいように出力
-    - name: Display actual repository claim
+    # デバッグログを後で参照しやすいように出力
+    - name: Display actual repository claim # <--- このステップのインデントを修正
       run: echo Actual repository claim was: ${{ steps.token_debug.outputs.actual_repository_claim }}
 
     - name: Test STT Service
@@ -202,30 +202,35 @@ jobs:
 
   # セキュリティスキャン
   security:
-   runs-on: ubuntu-latest
-   steps:
-   - name: Checkout code
-     uses: actions/checkout@v4
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-   - name: Setup Node.js
-     uses: actions/setup-node@v4
-     with:
-       node-version: '18'
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
 
-   - name: Run frontend security audit
-     run: |
-      npm ci
-      npm audit --audit-level=high
+    - name: Run frontend security audit
+      run: |
+        npm ci
+        npm audit --audit-level=high
 
-   - name: Run backend security audit
-     working-directory: ./backend
-     run: |
-      npm ci
-      npm audit --audit-level=high
+    - name: Run backend security audit
+      working-directory: ./backend
+      run: |
+        npm ci
+        npm audit --audit-level=high
 
-   - name: Scan for secrets
-     uses: trufflesecurity/trufflehog@main
-     with:
-      path: ./
-      base: HEAD~1
-      head: HEAD
+    - name: Scan for secrets
+      uses: trufflesecurity/trufflehog@main
+      with:
+        path: ./
+        base: HEAD~1
+        head: HEAD
+
+# このコメントは security ジョブの外にあり、無関係なため削除または適切な位置に移動が必要です
+# (もしこれが意図したデバッグステップであれば、backend ジョブの steps の中に移動してください)
+# - name: Display actual repository claim
+#   run: echo Actual repository claim was: ${{ steps.token_debug.outputs.actual_repository_claim }}
