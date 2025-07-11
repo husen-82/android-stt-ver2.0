@@ -12,20 +12,27 @@ class GoogleSTTService {
   // サービス初期化
   async initialize() {
     try {
-      console.log('Initializing Google STT Service...');
+      console.log('STT Service: Step 1 - Initializing Google STT Service...');
       
       // Workload Identity認証
+      console.log('STT Service: Step 2 - Calling workloadIdentityManager.initialize()...');
       await workloadIdentityManager.initialize();
+      console.log('STT Service: Step 3 - workloadIdentityManager.initialize() completed. Getting authenticated client...');
+      
       const authClient = await workloadIdentityManager.getAuthenticatedClient();
+      console.log('STT Service: Step 4 - Authenticated client obtained.');
       
       // Speech Clientを初期化
+      const projectId = await workloadIdentityManager.getProjectId();
+      console.log(`STT Service: Step 5 - Project ID obtained: ${projectId}. Initializing SpeechClient...`);
+      
       this.speechClient = new SpeechClient({
-        projectId: await workloadIdentityManager.getProjectId(),
+        projectId:projectId,
         auth: authClient
       });
       
       this.initialized = true;
-      console.log('Google STT Service initialized successfully');
+      console.log('STT Service: Step 6 - Google STT Service initialized successfully.');
       
     } catch (error) {
       console.error('Google STT Service initialization failed:', error);
