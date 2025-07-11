@@ -120,7 +120,7 @@ jobs:
 
     # デバッグログを後で参照しやすいように出力
     - name: Display actual repository claim # <--- このステップのインデントを修正
-      run: echo Actual repository claim was: ${{ steps.token_debug.outputs.actual_repository_claim }}
+      run: echo Actual repository claim was:${{ steps.token_debug.outputs.actual_repository_claim }}
 
     - name: Test STT Service
       run: |
